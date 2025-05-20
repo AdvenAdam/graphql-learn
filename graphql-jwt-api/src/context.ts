@@ -1,5 +1,4 @@
 import { Request } from 'express'
-import { verify } from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -9,11 +8,12 @@ export interface Context {
 	userId?: number
 }
 
-export const createContext = ({ req }: { req: Request }): Context => {
+export const createContext = async ({ req }: { req: Request }): Promise<Context> => {
 	const authHeader = req.headers.authorization
 	if (authHeader?.startsWith('Bearer ')) {
 		const token = authHeader.replace('Bearer ', '')
 		try {
+			const { verify } = await import('jsonwebtoken')
 			const payload = verify(token, process.env.JWT_SECRET!) as { userId: number }
 			return { prisma, userId: payload.userId }
 		} catch (err) {
