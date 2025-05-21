@@ -2,3 +2,4 @@
 .env
 tsconfig.json
 migration_lock.toml
+.turbo
