@@ -40,7 +40,8 @@ export const resolvers = {
 			const user = await ctx.prisma.user.create({
 				data: { email: args.email, password: hashedPassword },
 			})
-			return jwt.sign({ userId: user.id }, process.env.JWT_SECRET!)
+			const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!)
+			return { user, token }
 		},
 
 		login: async (_: unknown, args: LoginArgs, ctx: Context) => {
@@ -48,7 +49,8 @@ export const resolvers = {
 			if (!user || !(await bcrypt.compare(args.password, user.password))) {
 				throw new Error('Invalid credentials')
 			}
-			return jwt.sign({ userId: user.id }, process.env.JWT_SECRET!)
+			const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!)
+			return { user, token }
 		},
 
 		createGame: async (_: unknown, args: CreateGameArgs, ctx: Context) => {

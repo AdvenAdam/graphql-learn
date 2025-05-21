@@ -9,11 +9,54 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { z } from "zod"
+import { useLoginFormStore } from "@/store/formStore"
+import { useUserStore } from "@/store/userStore"
+import { useForm } from "@tanstack/react-form"
+import { useSigninMutation } from "@/hooks/useAuthMutation"
+import { toast } from "sonner"
+import { useRouter } from "@tanstack/react-router"
 
 export function SignInForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const signinMutation = useSigninMutation();
+  const router = useRouter();
+  const baseSchema = z.object({
+    email: z.string().nonempty({ message: "Email is required" }).email("Invalid email"),
+    password: z.string().nonempty({ message: "Password is required" }),
+  });
+
+  const { email, password, setField } = useLoginFormStore();
+  const { setUser } = useUserStore();
+  const form = useForm({
+    defaultValues: {
+      email,
+      password,
+    },
+    validators: {
+      onChange: baseSchema,
+    },
+    onSubmit: async ({ value }) => {
+      signinMutation.mutate(value, {
+        onSuccess: (data) => {
+          setField("email", value.email);
+          setField("password", value.password);
+          const { token, user } = data.login;
+          setUser({ token, email: user.email, id: user.id });
+          toast.success('signin success!')
+          router.navigate({ to: "/games" });
+        },
+        onError: (error) => {
+          console.log("🚀 ~ onSubmit: ~ error:", error)
+          toast.success('signin failed!')
+
+        },
+      });
+
+    },
+  });
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -24,16 +67,30 @@ export function SignInForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(e);
+          }}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
+                <form.Field name="email">
+                  {(field) => (
+                    <>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="m@example.com"
+                      />
+                      {field.state.meta.errors?.[0] && field.state.meta.isTouched && (
+                        <p className="text-sm text-red-600 mt-1">{field.state.meta.errors[0]?.message}</p>
+                      )}
+                    </>
+                  )}
+                </form.Field>
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -45,11 +102,35 @@ export function SignInForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" placeholder="Password" required />
+                <form.Field name="password">
+                  {(field) => (
+                    <>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="Password"
+                      />
+                      {field.state.meta.errors?.[0] && field.state.meta.isTouched && (
+                        <p className="text-sm text-red-600 mt-1">{field.state.meta.errors[0]?.message}</p>
+                      )}
+                    </>
+                  )}
+                </form.Field>
               </div>
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
+              <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
+                {([isSubmitting, canSubmit]) => (
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={!canSubmit}
+                  >
+                    {isSubmitting ? "..." : "Sign In"}
+                  </Button>
+                )}
+              </form.Subscribe>
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}

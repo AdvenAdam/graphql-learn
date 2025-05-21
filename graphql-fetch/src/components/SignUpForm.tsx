@@ -6,8 +6,14 @@ import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useSignupFormStore } from "@/store/formStore";
 import { useForm } from "@tanstack/react-form";
+import { Link, useRouter } from "@tanstack/react-router";
+import { useUserStore } from "@/store/userStore";
+import { toast } from "sonner";
+import { useSignupMutation } from "@/hooks/useAuthMutation";
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+  const signupMutation = useSignupMutation();
+  const router = useRouter();
   const baseSchema = z.object({
     email: z.string().nonempty({ message: "Email is required" }).email("Invalid email"),
     password: z.string().nonempty({ message: "Password is required" }).min(5, "Password too short"),
@@ -20,7 +26,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   });
 
   const { email, password, repassword, setField } = useSignupFormStore();
-
+  const { setUser } = useUserStore();
   const form = useForm({
     defaultValues: {
       email,
@@ -31,9 +37,21 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       onChange: schema,
     },
     onSubmit: async ({ value }) => {
-      setField("email", value.email);
-      setField("password", value.password);
-      alert("Submitted successfully!\n" + JSON.stringify(value, null, 2));
+      signupMutation.mutate(value, {
+        onSuccess: (data) => {
+          setField("email", value.email);
+          setField("password", value.password);
+          const { token, user } = data.signup;
+          setUser({ token, email: user.email, id: user.id });
+          toast.success('signup success!')
+          router.navigate({ to: "/" });
+        },
+        onError: (error) => {
+          console.log("🚀 ~ onSubmit: ~ error:", error)
+          toast.success('signup failed!')
+
+        },
+      });
     },
   });
 
@@ -49,7 +67,10 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={(e) => form.handleSubmit(e)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit(e);
+            }}
             className="flex flex-col gap-6"
           >
             {/* Email */}
@@ -133,12 +154,12 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <a
-                href="/"
+              <Link
+                to="/"
                 className="underline underline-offset-4"
               >
                 Sign in
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>

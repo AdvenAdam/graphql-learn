@@ -1,7 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { SignInForm } from '@/components/SignInForm'
+import { useUserStore } from '@/store/userStore'
 
 export const Route = createFileRoute('/')({
+  loader: () => {
+    const isAuthenticated = useUserStore.getState().isAuthenticated
+    if (isAuthenticated()) {
+      throw redirect({
+        to: '/games',
+      })
+    }
+  },
   component: App,
 })
 
