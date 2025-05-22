@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { z } from "zod"
 import { useLoginFormStore } from "@/store/formStore"
-import { useUserStore } from "@/store/userStore"
 import { useForm } from "@tanstack/react-form"
 import { useSigninMutation } from "@/hooks/useAuthMutation"
 import { toast } from "sonner"
@@ -28,8 +27,7 @@ export function SignInForm({
     password: z.string().nonempty({ message: "Password is required" }),
   });
 
-  const { email, password, setField } = useLoginFormStore();
-  const { setUser } = useUserStore();
+  const { email, password, } = useLoginFormStore();
   const form = useForm({
     defaultValues: {
       email,
@@ -39,12 +37,9 @@ export function SignInForm({
       onChange: baseSchema,
     },
     onSubmit: async ({ value }) => {
-      signinMutation.mutate(value, {
-        onSuccess: (data) => {
-          setField("email", value.email);
-          setField("password", value.password);
-          const { token, user } = data.login;
-          setUser({ token, email: user.email, id: user.id });
+      const { email, password } = value
+      signinMutation.mutate({ email, password }, {
+        onSuccess: () => {
           toast.success('signin success!')
           router.navigate({ to: "/games" });
         },

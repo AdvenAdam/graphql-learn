@@ -1,65 +1,37 @@
-// hooks/useAuthMutations.ts
 import { useMutation } from '@tanstack/react-query'
-import { gql, request } from 'graphql-request'
-
-const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
-if (!endpoint) {
-	throw new Error('Missing VITE_GRAPHQL_ENDPOINT environment variable')
-}
-
-const SIGNUP_MUTATION = gql`
-	mutation Signup($email: String!, $password: String!) {
-		signup(email: $email, password: $password) {
-			token
-			user {
-				id
-				email
-			}
-		}
-	}
-`
-
-const SIGNIN_MUTATION = gql`
-	mutation Login($email: String!, $password: String!) {
-		login(email: $email, password: $password) {
-			token
-			user {
-				id
-				email
-			}
-		}
-	}
-`
-
-type AuthPayload = {
-	token: string
-	user: {
-		id: string
-		email: string
-	}
-}
-
-type AuthInput = {
-	email: string
-	password: string
-}
-
-type SignupResponse = {
-	signup: AuthPayload
-}
-
-type SigninResponse = {
-	login: AuthPayload
-}
+import { graphqlClient } from '../lib/graphqlClient'
+import { SIGNIN_MUTATION, SIGNUP_MUTATION } from '../graphql/mutations/auth'
+import type { AuthInput, SignupResponse, SigninResponse } from '../types/auth'
+import { useUserStore } from '@/store/userStore'
 
 export function useSignupMutation() {
+	const { setUser } = useUserStore()
+
 	return useMutation<SignupResponse, Error, AuthInput>({
-		mutationFn: (input) => request(endpoint, SIGNUP_MUTATION, input),
+		mutationFn: (input) => graphqlClient.request(SIGNUP_MUTATION, input),
+		onSuccess: ({ signup }) => {
+			setUser({
+				token: signup.token,
+				email: signup.user.email,
+				id: signup.user.id,
+			})
+		},
+		onError: (error) => {
+			console.error('Signup failed:', error.message)
+		},
 	})
 }
 
 export function useSigninMutation() {
+	const { setUser } = useUserStore()
+
 	return useMutation<SigninResponse, Error, AuthInput>({
-		mutationFn: (input) => request(endpoint, SIGNIN_MUTATION, input),
+		mutationFn: (input) => graphqlClient.request(SIGNIN_MUTATION, input),
+		onSuccess: ({ login }) => {
+			setUser(login)
+		},
+		onError: (error) => {
+			console.error('Signin failed:', error.message)
+		},
 	})
 }

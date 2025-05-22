@@ -1,5 +1,6 @@
 import { Request } from 'express'
 import { PrismaClient } from '@prisma/client'
+import jwt from 'jsonwebtoken'
 
 const prisma = new PrismaClient()
 
@@ -13,8 +14,7 @@ export const createContext = async ({ req }: { req: Request }): Promise<Context>
 	if (authHeader?.startsWith('Bearer ')) {
 		const token = authHeader.replace('Bearer ', '')
 		try {
-			const { verify } = await import('jsonwebtoken')
-			const payload = verify(token, process.env.JWT_SECRET!) as { userId: number }
+			const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
 			return { prisma, userId: payload.userId }
 		} catch (err) {
 			console.warn('Invalid or expired token:', err)

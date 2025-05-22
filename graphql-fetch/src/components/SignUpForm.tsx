@@ -7,12 +7,12 @@ import { z } from "zod";
 import { useSignupFormStore } from "@/store/formStore";
 import { useForm } from "@tanstack/react-form";
 import { Link, useRouter } from "@tanstack/react-router";
-import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 import { useSignupMutation } from "@/hooks/useAuthMutation";
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const signupMutation = useSignupMutation();
+
   const router = useRouter();
   const baseSchema = z.object({
     email: z.string().nonempty({ message: "Email is required" }).email("Invalid email"),
@@ -25,8 +25,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     path: ["repassword"],
   });
 
-  const { email, password, repassword, setField } = useSignupFormStore();
-  const { setUser } = useUserStore();
+  const { email, password, repassword } = useSignupFormStore();
   const form = useForm({
     defaultValues: {
       email,
@@ -37,12 +36,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       onChange: schema,
     },
     onSubmit: async ({ value }) => {
-      signupMutation.mutate(value, {
-        onSuccess: (data) => {
-          setField("email", value.email);
-          setField("password", value.password);
-          const { token, user } = data.signup;
-          setUser({ token, email: user.email, id: user.id });
+      const { email, password } = value;
+      signupMutation.mutate({ email, password }, {
+        onSuccess: () => {
           toast.success('signup success!')
           router.navigate({ to: "/" });
         },
