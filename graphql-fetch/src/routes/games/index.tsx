@@ -11,7 +11,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Loader, Send } from 'lucide-react'
+import { Loader, Send, Trash } from 'lucide-react'
 
 // Route definition
 export const Route = createFileRoute('/games/')({
@@ -25,8 +25,9 @@ export const Route = createFileRoute('/games/')({
 })
 
 function PostsIndexComponent() {
-    const token = useUserStore((state) => state.token)
+    const { token, id: idUser } = useUserStore((state) => state)
     const { data, isLoading, error } = useGames(token)
+    console.log("🚀 ~ PostsIndexComponent ~ data:", idUser)
 
     if (isLoading) return <p>Loading games...</p>
     if (error) return <p>Error: {(error as Error).message}</p>
@@ -35,7 +36,7 @@ function PostsIndexComponent() {
         <div className="flex min-h-svh w-full items-center justify-center">
             <div className="w-full grid md:grid-cols-2 gap-2 mx-auto max-w-3xl p-3">
                 {data?.games.map((game) => (
-                    <GameCard key={game.id} game={game} token={token} />
+                    <GameCard key={game.id} game={game} token={token} idUser={idUser} />
                 ))}
                 <div className="w-full col-span-2">
                     <AddGame />
@@ -46,7 +47,7 @@ function PostsIndexComponent() {
 }
 
 // GameCard component
-const GameCard = ({ game, token }: { game: any; token: string }) => {
+const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: string; }) => {
     const createReview = useCreateReview()
 
     const schema = z.object({
@@ -81,12 +82,23 @@ const GameCard = ({ game, token }: { game: any; token: string }) => {
                 <CardDescription>Lorem ipsum dolor sit amet consectetur adipisicing elit.</CardDescription>
             </CardHeader>
             <CardContent>
-                {game.reviews.map((review: any) => (
-                    <div key={review.id} className="mb-3">
-                        <span className="text-gray-400 text-xs">{review.user.email}</span>
-                        <p className="text-gray-700 text-sm">{review.content}</p>
-                    </div>
-                ))}
+                <div className="mb-3">
+                    {game.reviews.map((review: any) => (
+                        <div key={review.id} className="mb-1 flex justify-between">
+                            <div className="">
+                                <span className="text-gray-400 text-xs">{review.user.email}</span>
+                                <p className="text-gray-700 text-sm">{review.content}</p>
+                            </div>
+                            {
+                                review.user.id == idUser && (
+                                    <Button size="icon" className="text-xs" variant={'ghost'}>
+                                        <Trash />
+                                    </Button>
+                                )
+                            }
+                        </div>
+                    ))}
+                </div>
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();

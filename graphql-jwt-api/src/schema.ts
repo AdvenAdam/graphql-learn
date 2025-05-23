@@ -35,5 +35,6 @@ export const typeDefs = gql`
 		login(email: String!, password: String!): AuthResponse!
 		createGame(title: String!): Game!
 		createReview(gameId: Int!, content: String!): Review!
+		deleteReview(id: Int!): Boolean
 	}
 `

@@ -72,5 +72,13 @@ export const resolvers = {
 				},
 			})
 		},
+		deleteReview: async (_: unknown, { id }: { id: number }, ctx: Context) => {
+			if (!ctx.userId) throw new Error('Not authenticated')
+			const review = await ctx.prisma.review.findUnique({ where: { id } })
+			if (review?.userId !== ctx.userId) throw new Error('Forbidden')
+
+			await ctx.prisma.review.delete({ where: { id } })
+			return true
+		},
 	},
 }

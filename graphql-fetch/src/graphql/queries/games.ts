@@ -8,6 +8,7 @@ export const GAMES_QUERY = gql`
 			reviews {
 				content
 				user {
+					id
 					email
 				}
 			}
