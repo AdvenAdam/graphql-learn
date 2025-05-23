@@ -60,7 +60,6 @@ export const resolvers = {
 
 		createReview: async (_: unknown, args: CreateReviewArgs, ctx: Context) => {
 			if (!ctx.userId) throw new Error('Not authenticated')
-
 			return ctx.prisma.review.create({
 				data: {
 					content: args.content,
