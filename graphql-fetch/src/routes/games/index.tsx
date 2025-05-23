@@ -13,9 +13,18 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Loader, Send } from 'lucide-react'
 
+// Route definition
+export const Route = createFileRoute('/games/')({
+    loader: () => {
+        const isAuthenticated = useUserStore.getState().isAuthenticated
+        if (!isAuthenticated()) {
+            throw redirect({ to: '/' })
+        }
+    },
+    component: PostsIndexComponent,
+})
 
-
-const PostsIndexComponent = () => {
+function PostsIndexComponent() {
     const token = useUserStore((state) => state.token)
     const { data, isLoading, error } = useGames(token)
 
@@ -124,13 +133,3 @@ const GameCard = ({ game, token }: { game: any; token: string }) => {
 }
 
 
-// Route definition
-export const Route = createFileRoute('/games/')({
-    loader: () => {
-        const isAuthenticated = useUserStore.getState().isAuthenticated
-        if (!isAuthenticated()) {
-            throw redirect({ to: '/' })
-        }
-    },
-    component: PostsIndexComponent,
-})
