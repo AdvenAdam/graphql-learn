@@ -1,3 +1,7 @@
+export type DeleteGameInput = {
+	gameId: number
+	token: string
+}
 export type CreateGameInput = {
 	title: string
 	token: string

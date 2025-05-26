@@ -80,5 +80,16 @@ export const resolvers = {
 			await ctx.prisma.review.delete({ where: { id } })
 			return true
 		},
+
+		deleteGame: async (_: unknown, { id }: { id: number }, ctx: Context) => {
+			if (!ctx.userId) throw new Error('Not authenticated')
+			await ctx.prisma.$transaction(async (tx) => {
+				const game = await tx.game.findUnique({ where: { id } })
+				if (!game) throw new Error('Game not found')
+				await tx.review.deleteMany({ where: { gameId: id } })
+				await tx.game.delete({ where: { id } })
+			})
+			return true
+		},
 	},
 }

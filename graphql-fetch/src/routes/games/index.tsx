@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Loader, Send, Trash } from 'lucide-react'
+import { useDeleteGame } from '@/hooks/useGameMutation'
 
 // Route definition
 export const Route = createFileRoute('/games/')({
@@ -49,9 +50,9 @@ function PostsIndexComponent() {
 
 // GameCard component
 const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: string; }) => {
-    console.log("🚀 ~ GameCard ~ game:", game)
     const createReview = useCreateReview()
     const deleteReview = useDeleteReview()
+    const deleteGame = useDeleteGame()
     const schema = z.object({
         content: z.string().nonempty({ message: 'Review is required' }).min(3, 'Review too short'),
     })
@@ -77,7 +78,6 @@ const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: s
     })
 
     const onDelete = (idReview: number) => {
-        console.log("🚀 ~ onDelete ~ idReview:", idReview)
         deleteReview.mutate({ reviewId: idReview, token }, {
             onSuccess: () => {
                 toast.success('Review deleted successfully!')
@@ -88,12 +88,32 @@ const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: s
             },
         })
     }
+    const onDeleteGame = (id: number) => {
+        deleteGame.mutate({ gameId: id, token }, {
+            onSuccess: () => {
+                toast.success('Game deleted successfully!')
+            },
+            onError: (error) => {
+                console.error('Delete game error:', error)
+                toast.error('Failed to delete game.')
+            },
+        })
+    }
 
     return (
         <Card key={game.id}>
             <CardHeader>
                 <CardTitle className="text-3xl">{game.title}</CardTitle>
-                <CardDescription>Lorem ipsum dolor sit amet consectetur adipisicing elit.</CardDescription>
+                <CardDescription className='flex justify-between items-center'>
+                    <p>
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    </p>
+                    <div className="">
+                        <Button size="icon" className="text-xs" variant={'ghost'} onClick={() => onDeleteGame(game.id)}>
+                            <Trash />
+                        </Button>
+                    </div>
+                </CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="mb-3">

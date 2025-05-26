@@ -8,3 +8,9 @@ export const CREATE_GAME_MUTATION = gql`
 		}
 	}
 `
+
+export const DELETE_GAME_MUTATION = gql`
+	mutation DeleteGame($id: Int!) {
+		deleteGame(id: $id)
+	}
+`

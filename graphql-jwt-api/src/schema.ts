@@ -36,5 +36,6 @@ export const typeDefs = gql`
 		createGame(title: String!): Game!
 		createReview(gameId: Int!, content: String!): Review!
 		deleteReview(id: Int!): Boolean
+		deleteGame(id: Int!): Boolean
 	}
 `

@@ -22,7 +22,6 @@ export const useDeleteReview = () => {
 
 	return useMutation({
 		mutationFn: async ({ reviewId, token }: DeleteReviewInput) => {
-			console.log('🚀 ~ mutationFn: ~ reviewId:', reviewId)
 			graphqlClient.setHeader('Authorization', `Bearer ${token}`)
 			return await graphqlClient.request(DELETE_REVIEW_MUTATION, { id: reviewId })
 		},
