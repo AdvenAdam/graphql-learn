@@ -3,6 +3,10 @@ export type CreateReviewInput = {
 	gameId: number
 	content: string
 }
+export type DeleteReviewInput = {
+	token: string
+	reviewId: number
+}
 
 export type CreateReviewVariables = {
 	gameId: number

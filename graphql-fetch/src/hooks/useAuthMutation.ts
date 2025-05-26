@@ -10,11 +10,9 @@ export function useSignupMutation() {
 	return useMutation<SignupResponse, Error, AuthInput>({
 		mutationFn: (input) => graphqlClient.request(SIGNUP_MUTATION, input),
 		onSuccess: ({ signup }) => {
-			setUser({
-				token: signup.token,
-				email: signup.user.email,
-				id: signup.user.id,
-			})
+			setUser('email', signup.user.email)
+			setUser('token', signup.token)
+			setUser('id', signup.user.id)
 		},
 		onError: (error) => {
 			console.error('Signup failed:', error.message)
@@ -28,7 +26,9 @@ export function useSigninMutation() {
 	return useMutation<SigninResponse, Error, AuthInput>({
 		mutationFn: (input) => graphqlClient.request(SIGNIN_MUTATION, input),
 		onSuccess: ({ login }) => {
-			setUser(login)
+			setUser('email', login.user.email)
+			setUser('token', login.token)
+			setUser('id', login.user.id)
 		},
 		onError: (error) => {
 			console.error('Signin failed:', error.message)

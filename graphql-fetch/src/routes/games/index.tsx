@@ -3,7 +3,7 @@ import { AddGame } from '@/components/AddGame'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useCreateReview } from '@/hooks/useReviewMutation'
+import { useCreateReview, useDeleteReview } from '@/hooks/useReviewMutation'
 import { useGames } from '@/hooks/useGames'
 import { useUserStore } from '@/store/userStore'
 import { useForm } from '@tanstack/react-form'
@@ -27,7 +27,6 @@ export const Route = createFileRoute('/games/')({
 function PostsIndexComponent() {
     const { token, id: idUser } = useUserStore((state) => state)
     const { data, isLoading, error } = useGames(token)
-    console.log("🚀 ~ PostsIndexComponent ~ data:", idUser)
 
     if (isLoading) return <p>Loading games...</p>
     if (error) return <p>Error: {(error as Error).message}</p>
@@ -36,7 +35,9 @@ function PostsIndexComponent() {
         <div className="flex min-h-svh w-full items-center justify-center">
             <div className="w-full grid md:grid-cols-2 gap-2 mx-auto max-w-3xl p-3">
                 {data?.games.map((game) => (
-                    <GameCard key={game.id} game={game} token={token} idUser={idUser} />
+                    <div key={game.id}>
+                        <GameCard game={game} token={token} idUser={idUser} />
+                    </div>
                 ))}
                 <div className="w-full col-span-2">
                     <AddGame />
@@ -48,8 +49,9 @@ function PostsIndexComponent() {
 
 // GameCard component
 const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: string; }) => {
+    console.log("🚀 ~ GameCard ~ game:", game)
     const createReview = useCreateReview()
-
+    const deleteReview = useDeleteReview()
     const schema = z.object({
         content: z.string().nonempty({ message: 'Review is required' }).min(3, 'Review too short'),
     })
@@ -74,9 +76,21 @@ const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: s
         },
     })
 
+    const onDelete = (idReview: number) => {
+        console.log("🚀 ~ onDelete ~ idReview:", idReview)
+        deleteReview.mutate({ reviewId: idReview, token }, {
+            onSuccess: () => {
+                toast.success('Review deleted successfully!')
+            },
+            onError: (error) => {
+                console.error('Delete review error:', error)
+                toast.error('Failed to delete review.')
+            },
+        })
+    }
 
     return (
-        <Card>
+        <Card key={game.id}>
             <CardHeader>
                 <CardTitle className="text-3xl">{game.title}</CardTitle>
                 <CardDescription>Lorem ipsum dolor sit amet consectetur adipisicing elit.</CardDescription>
@@ -91,7 +105,7 @@ const GameCard = ({ game, token, idUser }: { game: any; token: string; idUser: s
                             </div>
                             {
                                 review.user.id == idUser && (
-                                    <Button size="icon" className="text-xs" variant={'ghost'}>
+                                    <Button size="icon" className="text-xs" variant={'ghost'} onClick={() => onDelete(review.id)}>
                                         <Trash />
                                     </Button>
                                 )

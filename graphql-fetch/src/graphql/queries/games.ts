@@ -6,6 +6,7 @@ export const GAMES_QUERY = gql`
 			id
 			title
 			reviews {
+				id
 				content
 				user {
 					id
